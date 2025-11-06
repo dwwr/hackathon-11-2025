@@ -384,6 +384,19 @@ export default function App() {
 
   // Menu screen
   if (screen === 'menu') {
+    return (
+      <MenuScreen
+        status={status}
+        inviteCode={inviteCode}
+        setInviteCode={setInviteCode}
+        handleCreateMatch={handleCreateMatch}
+        handleJoinMatch={handleJoinMatch}
+      />
+    )
+  }
+
+  // Old menu code - kept for reference but not used (hooks can't be in conditionals)
+  if (false && screen === 'menu') {
     // Generate random orders for marquee
     const [marqueeOrders, setMarqueeOrders] = useState<Order[]>(() =>
       Array.from({ length: 20 }, () => generateRandomOrder()),
