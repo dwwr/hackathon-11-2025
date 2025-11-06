@@ -2,11 +2,10 @@
 
 ## "板前 On The Line: Sushi-ya Tactics"
 
-### (itamae: line cook, sushi-ya: sushi restaurant)
+#### (itamae: line cook, sushi-ya: sushi restaurant)
 
-Kyo no thema wa: sushi!
+Attention to detail. Sense of urgency. A passion for fresh fish. Do you have what it takes to become a master sushi chef? Team up with a friend to complete orders and sell beautiful dishes, but be careful- your exacting clientele won’t accept mistakes. Success depends on verbal communication and teamwork. Can you quash beef? Can you keep up with the flood of orders, or will you find yourself underwater, swimming with the fishes, in the weeds, or in other words, 86’d? Become the itamae in Itamae On The Line: Sushi-ya Tactics. Allez Cuisine!
 
-Attention to detail. Sense of urgency. A passion for fresh fish. Do you have what it takes to become a master sushi chef? Team up with a friend to complete orders and sell beautiful dishes, but be careful- your exacting clientele won’t accept mistakes. Success depends on verbal communication, teamwork, and respect between players. Can you quash beef? Can you keep up with the flood of orders, or will you find yourself underwater, swimming with the fishes, in the weeds, or in other words, 86’d? Become the itamae in Itamae On The Line: Sushi-ya Tactics. Allez Cuisine!
 We randomly pull from a matrix of ingredients to generate a wide variety of “orders.” The players must execute and sell sushi to the specifications of the order. Money and fame are accumulated or deducted based on performance.
 
 #### Game Loop:
