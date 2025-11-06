@@ -83,6 +83,40 @@ export default function App() {
     })
   }
 
+  const [orderId, setOrderId] = useState<string | null>(null)
+  const [score, setScore] = useState<number>(0)
+  const [stars, setStars] = useState<number>(5)
+
+  useEffect(() => {
+    if (!socket) return
+
+    // Listen for new orders
+    socket.on('newOrder', (order: any) => {
+      console.log('🧾 New order:', order)
+      setOrderId(order.id)
+    })
+
+    // Listen for score updates
+    socket.on('scoreUpdate', (data: any) => {
+      console.log('📊 Score update:', data)
+      setScore(data.score)
+      setStars(data.stars)
+      if (data.orderStatus) setOrderId(null) // clear current order if completed
+    })
+
+    // Listen for game over
+    socket.on('gameOver', (data: any) => {
+      alert(`Game Over! Final Score: ${data.finalScore}`)
+      setScreen('menu')
+    })
+
+    return () => {
+      socket.off('newOrder')
+      socket.off('scoreUpdate')
+      socket.off('gameOver')
+    }
+  }, [socket])
+
   // --- UI SCREENS ---
 
   // Menu screen
@@ -129,34 +163,68 @@ export default function App() {
     )
   }
 
-  // Game scene (shared for player1 and player2)
   if (screen === 'game') {
+    // Handlers
+    const handleCreateOrder = () => {
+      socket?.emit('createOrder', (res: any) => {
+        console.log('createOrder →', res)
+        if (res?.order?.id) setOrderId(res.order.id)
+      })
+    }
+  
+    const handleCompleteOrder = (status: 'pass' | 'fail') => {
+      if (!orderId) return
+      socket?.emit('completeOrder', { orderId, status }, (res: any) => {
+        console.log('completeOrder →', res)
+        setOrderId(null)
+      })
+    }
+  
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white space-y-4">
         <h1 className="text-3xl font-bold">Game Scene</h1>
         <p>Match ID: {matchId}</p>
         <p>You are <strong>{role}</strong></p>
-        <button
-          onClick={() => socket?.emit('createOrder', res => console.log('createOrder →', res))}
-          className="px-6 py-3 bg-yellow-600 rounded hover:bg-yellow-700"
-        >
-          Create Order
-        </button>
-        <button
-          onClick={() =>
-            socket?.emit(
-              'completeOrder',
-              { orderId: 'fake', status: 'fail' },
-              res => console.log('completeOrder →', res)
-            )
-          }
-          className="px-6 py-3 bg-red-600 rounded hover:bg-red-700"
-        >
-          Fail Order (Test Game Over)
-        </button>
+  
+        <div className="flex gap-4 mt-4">
+          <div className="bg-gray-800 px-4 py-2 rounded">⭐ Stars: {stars}</div>
+          <div className="bg-gray-800 px-4 py-2 rounded">🏆 Score: {score}</div>
+        </div>
+  
+        {/* Show create order only if no order exists */}
+        {!orderId && (
+          <button
+            onClick={handleCreateOrder}
+            className="px-6 py-3 bg-yellow-600 rounded hover:bg-yellow-700 mt-6"
+          >
+            Create Order
+          </button>
+        )}
+  
+        {/* If an order exists, show its ID and pass/fail buttons */}
+        {orderId && (
+          <div className="flex flex-col items-center mt-6 space-y-3">
+            <p className="text-green-400 font-mono">Order ID: {orderId}</p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => handleCompleteOrder('pass')}
+                className="px-6 py-3 bg-green-600 rounded hover:bg-green-700"
+              >
+                ✅ Pass Order
+              </button>
+              <button
+                onClick={() => handleCompleteOrder('fail')}
+                className="px-6 py-3 bg-red-600 rounded hover:bg-red-700"
+              >
+                ❌ Fail Order
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     )
   }
+  
 
   return null
 }
