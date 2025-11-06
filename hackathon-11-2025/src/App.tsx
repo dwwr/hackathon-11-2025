@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { io, Socket } from 'socket.io-client'
 import ExpoScene from './scenes/expo_scene/expo_scene'
 import ChefScene from './scenes/chef_scene/chef_scene'
@@ -56,7 +56,13 @@ const generateRandomOrder = (): Order => {
 }
 
 // Menu Screen Component with Marquee
-const MenuScreen: React.FC<{ status: string; inviteCode: string; setInviteCode: (code: string) => void; handleCreateMatch: () => void; handleJoinMatch: () => void }> = ({
+const MenuScreen: React.FC<{
+  status: string
+  inviteCode: string
+  setInviteCode: (code: string) => void
+  handleCreateMatch: () => void
+  handleJoinMatch: () => void
+}> = ({
   status,
   inviteCode,
   setInviteCode,
@@ -71,10 +77,7 @@ const MenuScreen: React.FC<{ status: string; inviteCode: string; setInviteCode: 
   useEffect(() => {
     // Regenerate orders periodically for variety
     const interval = setInterval(() => {
-      setMarqueeOrders((prev) => [
-        ...prev.slice(1),
-        generateRandomOrder(),
-      ])
+      setMarqueeOrders((prev) => [...prev.slice(1), generateRandomOrder()])
     }, 2000)
     return () => clearInterval(interval)
   }, [])
