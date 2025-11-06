@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import type { Meta, StoryFn } from '@storybook/react'
 import Ticket from '.'
 import type { Order } from '@/types'
-import { assets } from '../origami/assets/index'
+import { assets } from '../../assets/index'
 
 const generateRandomOrder = () => {
   const fishIndex = Math.floor(Math.random() * assets.fish.length)
@@ -138,7 +138,7 @@ export const CustomTime = Template.bind({})
 CustomTime.args = {
   order: {
     rice: true,
-    fish: 0,
+    fish: 1,
     garnish: 2,
     sauce: 0,
   } as Order,

@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import type { Meta } from '@storybook/react'
 import Origami from './origami'
 import Ticket from './ticket'
-import { assets } from './origami/assets/index'
+import { assets } from '../assets/index'
 
 const generateRandomOrder = () => {
   const fishIndex = Math.floor(Math.random() * assets.fish.length)
