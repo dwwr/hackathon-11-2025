@@ -1,7 +1,7 @@
 import React from 'react'
 import { assets } from './assets/index'
 
-const PaperdollSpike: React.FC<Props> = ({ order }: Props) => {
+const Origami: React.FC<Props> = ({ order }: Props) => {
   const { rice, fish, garnish, sauce } = order
 
   const fishAsset = assets.fish[fish]
@@ -59,7 +59,7 @@ const PaperdollSpike: React.FC<Props> = ({ order }: Props) => {
   )
 }
 
-export default PaperdollSpike
+export default Origami
 
 interface Props {
   order: Order

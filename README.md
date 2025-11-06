@@ -55,6 +55,7 @@ We randomly pull from a matrix of ingredients to generate a wide variety of “o
 
 #### Beyond MVP:
 
+- mobile support
 - more assets, professional-tier UI and elements
 - multiple orders & multiple items per order
 - queue of orders that build up

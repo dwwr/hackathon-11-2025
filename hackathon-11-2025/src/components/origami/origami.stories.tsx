@@ -1,8 +1,8 @@
 /** @jsxImportSource react */
 import { useState, useEffect } from 'react'
 import type { Meta, StoryFn } from '@storybook/react'
-import PaperdollSpike from './origami'
 import { assets } from './assets/index'
+import Origami from './origami'
 
 const generateRandomOrder = () => {
   const fishIndex = Math.floor(Math.random() * assets.fish.length)
@@ -25,8 +25,8 @@ const generateRandomOrder = () => {
 }
 
 export default {
-  title: 'Components/PaperdollSpike',
-  component: PaperdollSpike,
+  title: 'Components/Origami Sushi Engine',
+  component: Origami,
   argTypes: {},
 } as Meta
 
@@ -48,12 +48,14 @@ const Template: StoryFn = () => {
         height: '100%',
         backgroundColor: '#ffffff',
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         boxSizing: 'border-box',
         padding: '2rem',
       }}
     >
+      <Origami order={randomOrder} />
       <div
         style={{
           padding: '10px',
@@ -71,7 +73,6 @@ const Template: StoryFn = () => {
         <div>Garnish: {garnish !== undefined ? garnish : 'None'}</div>
         <div>Sauce: {sauce !== undefined ? sauce : 'None'}</div>
       </div>
-      <PaperdollSpike order={randomOrder} />
     </div>
   )
 }
