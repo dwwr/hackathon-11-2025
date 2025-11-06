@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import type { Meta, StoryFn } from '@storybook/react'
 import { assets } from './assets/index'
-import Origami from './origami'
+import Origami from '.'
 
 const generateRandomOrder = () => {
   const fishIndex = Math.floor(Math.random() * assets.fish.length)

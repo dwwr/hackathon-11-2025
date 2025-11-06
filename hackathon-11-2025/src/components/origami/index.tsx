@@ -1,7 +1,10 @@
 import React from 'react'
 import { assets } from './assets/index'
+import type { OrigamiEngineProps } from '@/types'
 
-const Origami: React.FC<Props> = ({ order }: Props) => {
+const Origami: React.FC<OrigamiEngineProps> = ({
+  order,
+}: OrigamiEngineProps) => {
   const { rice, fish, garnish, sauce } = order
 
   const fishAsset = assets.fish[fish]
@@ -60,14 +63,3 @@ const Origami: React.FC<Props> = ({ order }: Props) => {
 }
 
 export default Origami
-
-interface Props {
-  order: Order
-}
-
-interface Order {
-  rice: boolean
-  fish: number
-  garnish?: number
-  sauce?: number
-}
