@@ -1,5 +1,6 @@
 export interface OrigamiEngineProps {
   order: Order
+  size?: number
 }
 
 export interface TicketProps {

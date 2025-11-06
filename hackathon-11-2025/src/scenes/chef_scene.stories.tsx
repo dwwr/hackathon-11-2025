@@ -5,7 +5,12 @@ import ChefScene from './chef_scene'
 const meta = {
   title: 'Scenes/Chef Scene',
   component: ChefScene,
-  argTypes: {},
+  argTypes: {
+    easyMode: {
+      control: 'boolean',
+      description: 'Show ingredient names below each ingredient',
+    },
+  },
 } satisfies Meta<typeof ChefScene>
 
 export default meta

@@ -4,6 +4,7 @@ import type { OrigamiEngineProps } from '@/types'
 
 const Origami: React.FC<OrigamiEngineProps> = ({
   order,
+  size = 100,
 }: OrigamiEngineProps) => {
   const { rice, fish, garnish, sauce } = order
 
@@ -16,8 +17,8 @@ const Origami: React.FC<OrigamiEngineProps> = ({
       <div
         style={{
           position: 'relative',
-          width: '100px',
-          height: '100px',
+          width: `${size}px`,
+          height: `${size}px`,
         }}
       >
         {rice && <img src={assets.rice} alt="Rice" />}
