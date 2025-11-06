@@ -6,9 +6,8 @@
   "packageManager": "yarn",
   "addOnOptions": {},
   "git": true,
+
   "version": 1,
   "framework": "react-cra",
-  "chosenAddOns": [
-    "eslint"
-  ]
+  "chosenAddOns": ["eslint"]
 }
