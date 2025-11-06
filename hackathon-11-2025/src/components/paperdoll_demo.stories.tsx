@@ -1,9 +1,9 @@
 /** @jsxImportSource react */
 import { useState, useEffect } from 'react'
 import type { Meta, StoryFn } from '@storybook/react'
-import Ticket from '.'
-import type { Order } from '@/types'
-import { assets } from '../origami/assets/index'
+import Origami from './origami'
+import Ticket from './ticket'
+import { assets } from './origami/assets/index'
 
 const generateRandomOrder = () => {
   const fishIndex = Math.floor(Math.random() * assets.fish.length)
@@ -38,7 +38,7 @@ const generateRandomTicketData = () => {
   ]
   const waiters = [
     'JW England',
-    'Sweet Baby D',
+    'Monica N.',
     'Sarah K.',
     'Mike T.',
     'Alex R.',
@@ -56,31 +56,11 @@ const generateRandomTicketData = () => {
 }
 
 const meta = {
-  title: 'Components/Ticket',
-  component: Ticket,
-  argTypes: {
-    orderNumber: {
-      control: 'text',
-      description: 'Order number',
-    },
-    table: {
-      control: 'text',
-      description: 'Table information',
-    },
-    waiter: {
-      control: 'text',
-      description: 'Waiter name',
-    },
-    sentTime: {
-      control: 'date',
-      description: 'Time when order was sent',
-    },
-  },
-} satisfies Meta<typeof Ticket>
+  title: 'Components/Paperdoll Demo',
+  component: Origami,
+} satisfies Meta<typeof Origami>
 
 export default meta
-
-const Template: StoryFn<typeof Ticket> = (args) => <Ticket {...args} />
 
 export const Default = () => {
   const [randomOrder, setRandomOrder] = useState(generateRandomOrder())
@@ -96,54 +76,46 @@ export const Default = () => {
   }, [])
 
   return (
-    <Ticket
-      order={randomOrder}
-      orderNumber={ticketData.orderNumber}
-      table={ticketData.table}
-      waiter={ticketData.waiter}
-      sentTime={ticketData.sentTime}
-    />
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        backgroundColor: '#ffffff',
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '2rem',
+        boxSizing: 'border-box',
+        padding: '2rem',
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Origami order={randomOrder} />
+      </div>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Ticket
+          order={randomOrder}
+          orderNumber={ticketData.orderNumber}
+          table={ticketData.table}
+          waiter={ticketData.waiter}
+          sentTime={ticketData.sentTime}
+        />
+      </div>
+    </div>
   )
-}
-
-export const NoRice = Template.bind({})
-NoRice.args = {
-  order: {
-    rice: false,
-    fish: 1,
-    garnish: undefined,
-    sauce: undefined,
-  } as Order,
-  orderNumber: 123,
-  table: 'Table 12',
-  waiter: 'Sweet Baby D',
-  sentTime: new Date('2024-01-15T18:45:00'),
-}
-
-export const FullOrder = Template.bind({})
-FullOrder.args = {
-  order: {
-    rice: true,
-    fish: 2,
-    garnish: 0,
-    sauce: 1,
-  } as Order,
-  orderNumber: 789,
-  table: 'VIP Table 1',
-  waiter: 'Sarah K.',
-  sentTime: new Date(),
-}
-
-export const CustomTime = Template.bind({})
-CustomTime.args = {
-  order: {
-    rice: true,
-    fish: 0,
-    garnish: 2,
-    sauce: 0,
-  } as Order,
-  orderNumber: 999,
-  table: 'Bar Seat 3',
-  waiter: 'Mike T.',
-  sentTime: 'Dec 25, 2023, 7:30 PM',
 }
