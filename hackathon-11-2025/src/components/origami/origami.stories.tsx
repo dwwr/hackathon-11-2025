@@ -1,7 +1,7 @@
 /** @jsxImportSource react */
 import { useState, useEffect } from 'react'
 import type { Meta, StoryFn } from '@storybook/react'
-import { assets } from './assets/index'
+import { assets } from '../../assets/index'
 import Origami from '.'
 import type { Order } from '@/types'
 
@@ -126,7 +126,7 @@ export const Nigiri = Template.bind({})
 Nigiri.args = {
   order: {
     rice: true,
-    fish: 0,
+    fish: 1,
     garnish: 1,
     sauce: 2,
   } as Order,

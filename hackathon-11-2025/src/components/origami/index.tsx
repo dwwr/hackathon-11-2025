@@ -1,5 +1,5 @@
 import React from 'react'
-import { assets } from './assets/index'
+import { assets } from '../../assets/index'
 import type { OrigamiEngineProps } from '@/types'
 
 const Origami: React.FC<OrigamiEngineProps> = ({
