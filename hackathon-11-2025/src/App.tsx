@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react'
 import { io, Socket } from 'socket.io-client'
+import ExpoScene from './scenes/expo_scene/expo_scene'
+import ChefScene from './scenes/chef_scene/chef_scene'
+import type { Order } from './types'
 
 interface MatchResponse {
   success: boolean
@@ -21,36 +24,39 @@ export default function App() {
 
   // Connect once on mount
   useEffect(() => {
-    const url = import.meta.env.VITE_SOCKET_URL || 'ws://localhost:2808'
-    const s = io(url)
-  
+    const url = import.meta.env.VITE_SOCKET_URL || 'http://localhost:2808'
+    const s = io(url, {
+      transports: ['websocket', 'polling'],
+    })
+
     s.on('connect', () => {
       setStatus(`Connected (${s.id})`)
     })
-  
+
     s.on('disconnect', () => {
       setStatus('Disconnected')
       setScreen('menu')
     })
-  
-    s.on('gameStart', data => {
+
+    s.on('gameStart', (data) => {
       console.log('Game started:', data)
+      // INSERT_YOUR_CODE
+      s.emit('createOrder', () => {})
       setScreen('game')
     })
-  
-    s.on('gameOver', data => {
+
+    s.on('gameOver', (data) => {
       alert(`Game Over! Final Score: ${data.finalScore}`)
       setScreen('menu')
     })
-  
+
     setSocket(s)
-  
+
     // ✅ return a cleanup FUNCTION (not the socket)
     return () => {
       s.disconnect()
     }
   }, [])
-  
 
   // --- CREATE MATCH ---
   const handleCreateMatch = () => {
@@ -84,16 +90,70 @@ export default function App() {
   }
 
   const [orderId, setOrderId] = useState<string | null>(null)
+  const [currentOrder, setCurrentOrder] = useState<Order | null>(null)
+  const [currentTicket, setCurrentTicket] = useState<Order | null>(null)
   const [score, setScore] = useState<number>(0)
   const [stars, setStars] = useState<number>(5)
+  const [serverName, setServerName] = useState<string>('Server Name')
+  const [tableNumber, setTableNumber] = useState<number>(12)
+  const [sentTime, setSentTime] = useState<Date>(new Date())
 
   useEffect(() => {
     if (!socket) return
 
-    // Listen for new orders
-    socket.on('newOrder', (order: any) => {
-      console.log('🧾 New order:', order)
-      setOrderId(order.id)
+    // Listen for new orders - server should send full order data
+    socket.on('newOrder', (data: any) => {
+      console.log('🧾 New order received:', data)
+
+      // Handle different possible data structures from server
+      let orderData: Order | null = null
+      let orderIdValue: string | null = null
+
+      if (data.order) {
+        // If order is nested in data.order
+        orderData = data.order as Order
+        orderIdValue = data.id || data.order.id
+      } else if (data.rice !== undefined || data.fish !== undefined) {
+        // If order data is at top level
+        orderData = data as Order
+        orderIdValue = data.id
+      } else if (data.id) {
+        // If only ID is sent, we'll need the server to send full order
+        // For now, log a warning
+        console.warn(
+          'Received order with only ID, but need full order data:',
+          data.id,
+        )
+        setOrderId(data.id)
+        return
+      }
+
+      if (orderData) {
+        // Ticket shows what was ordered (from server)
+        setCurrentTicket(orderData)
+        // Origami starts blank - waiting for chef to submit their order
+        setCurrentOrder({
+          rice: false,
+          fish: -1,
+        })
+        setOrderId(orderIdValue || null)
+
+        // Update metadata if provided
+        if (data.serverName) setServerName(data.serverName)
+        if (data.tableNumber !== undefined) setTableNumber(data.tableNumber)
+        if (data.sentTime) setSentTime(new Date(data.sentTime))
+        else setSentTime(new Date()) // Default to current time
+      }
+    })
+
+    // Listen for chef's completed order (what the chef actually made)
+    socket.on('chefOrderSubmitted', (data: any) => {
+      console.log('👨‍🍳 Chef order submitted:', data)
+      if (data.order) {
+        setCurrentOrder(data.order as Order)
+      } else if (data.rice !== undefined || data.fish !== undefined) {
+        setCurrentOrder(data as Order)
+      }
     })
 
     // Listen for score updates
@@ -101,17 +161,25 @@ export default function App() {
       console.log('📊 Score update:', data)
       setScore(data.score)
       setStars(data.stars)
-      if (data.orderStatus) setOrderId(null) // clear current order if completed
+      if (data.orderStatus) {
+        setOrderId(null)
+        setCurrentOrder(null)
+        setCurrentTicket(null)
+      }
     })
 
     // Listen for game over
     socket.on('gameOver', (data: any) => {
       alert(`Game Over! Final Score: ${data.finalScore}`)
       setScreen('menu')
+      setCurrentOrder(null)
+      setCurrentTicket(null)
+      setOrderId(null)
     })
 
     return () => {
       socket.off('newOrder')
+      socket.off('chefOrderSubmitted')
       socket.off('scoreUpdate')
       socket.off('gameOver')
     }
@@ -136,7 +204,7 @@ export default function App() {
         <div className="flex flex-col items-center">
           <input
             value={inviteCode}
-            onChange={e => setInviteCode(e.target.value)}
+            onChange={(e) => setInviteCode(e.target.value)}
             placeholder="Enter invite code"
             className="text-black px-3 py-2 rounded mb-2"
           />
@@ -164,67 +232,54 @@ export default function App() {
   }
 
   if (screen === 'game') {
-    // Handlers
-    const handleCreateOrder = () => {
-      socket?.emit('createOrder', (res: any) => {
-        console.log('createOrder →', res)
-        if (res?.order?.id) setOrderId(res.order.id)
-      })
+    // Render ExpoScene for player1, ChefScene for player2
+    if (role === 'player1') {
+      // If no order exists yet, show empty state
+      if (!currentOrder || !currentTicket) {
+        // Create empty order for initial render
+        const emptyOrder: Order = {
+          rice: false,
+          fish: -1,
+        }
+        return (
+          <ExpoScene
+            order={emptyOrder}
+            ticket={emptyOrder}
+            serverName={serverName}
+            tableNumber={tableNumber}
+            score={score}
+            stars={stars}
+            sentTime={sentTime}
+          />
+        )
+      }
+
+      return (
+        <ExpoScene
+          order={currentOrder}
+          ticket={currentTicket}
+          serverName={serverName}
+          tableNumber={tableNumber}
+          score={score}
+          stars={stars}
+          sentTime={sentTime}
+        />
+      )
     }
-  
-    const handleCompleteOrder = (status: 'pass' | 'fail') => {
-      if (!orderId) return
-      socket?.emit('completeOrder', { orderId, status }, (res: any) => {
-        console.log('completeOrder →', res)
-        setOrderId(null)
-      })
+
+    if (role === 'player2') {
+      return <ChefScene socket={socket} />
     }
-  
+
+    // Fallback if role is not set yet
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white space-y-4">
-        <h1 className="text-3xl font-bold">Game Scene</h1>
+        <h1 className="text-3xl font-bold">Loading...</h1>
         <p>Match ID: {matchId}</p>
-        <p>You are <strong>{role}</strong></p>
-  
-        <div className="flex gap-4 mt-4">
-          <div className="bg-gray-800 px-4 py-2 rounded">⭐ Stars: {stars}</div>
-          <div className="bg-gray-800 px-4 py-2 rounded">🏆 Score: {score}</div>
-        </div>
-  
-        {/* Show create order only if no order exists */}
-        {!orderId && (
-          <button
-            onClick={handleCreateOrder}
-            className="px-6 py-3 bg-yellow-600 rounded hover:bg-yellow-700 mt-6"
-          >
-            Create Order
-          </button>
-        )}
-  
-        {/* If an order exists, show its ID and pass/fail buttons */}
-        {orderId && (
-          <div className="flex flex-col items-center mt-6 space-y-3">
-            <p className="text-green-400 font-mono">Order ID: {orderId}</p>
-            <div className="flex gap-4">
-              <button
-                onClick={() => handleCompleteOrder('pass')}
-                className="px-6 py-3 bg-green-600 rounded hover:bg-green-700"
-              >
-                ✅ Pass Order
-              </button>
-              <button
-                onClick={() => handleCompleteOrder('fail')}
-                className="px-6 py-3 bg-red-600 rounded hover:bg-red-700"
-              >
-                ❌ Fail Order
-              </button>
-            </div>
-          </div>
-        )}
+        <p>Role: {role || 'Unknown'}</p>
       </div>
     )
   }
-  
 
   return null
 }

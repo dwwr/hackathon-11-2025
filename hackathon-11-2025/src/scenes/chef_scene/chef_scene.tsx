@@ -3,9 +3,11 @@ import Origami from '../../components/origami'
 import { assets } from '../../assets/index'
 import type { Order } from '@/types'
 import lineImage from '../../assets/line.jpg'
+import type { Socket } from 'socket.io-client'
 
 interface ChefSceneProps {
   easyMode?: boolean
+  socket?: Socket | null
 }
 
 interface IngredientRowLabelProps {
@@ -118,6 +120,7 @@ const DraggableIngredient: React.FC<DraggableIngredientProps> = ({
 
 const ChefScene: React.FC<ChefSceneProps> = ({
   easyMode: initialEasyMode = false,
+  socket,
 }) => {
   const fishNames = ['Salmon', 'Tamago', 'Tuna', 'Whitefish', 'Yellowtail']
   const garnishNames = ['Ginger', 'Momiji', 'Ume', 'Wasabi', 'Yuzu Kosho']
@@ -182,7 +185,29 @@ const ChefScene: React.FC<ChefSceneProps> = ({
   }
 
   const handleSubmit = () => {
-    console.log('Order submitted:', currentOrder)
+    // Validate that fish has been added (required)
+    if (currentOrder.fish < 0) {
+      alert('Fish is required! Please add fish to your order.')
+      return
+    }
+
+    // Submit the chef's completed order to the expo player
+    if (socket) {
+      socket.emit('submitOrder', currentOrder, (res: any) => {
+        console.log('submitOrder response:', res)
+        if (res.success) {
+          console.log('Order submitted to Player 1:', currentOrder)
+          // Clear the order after successful submission
+          clearOrder()
+        } else {
+          alert(`Failed to submit order: ${res.message}`)
+        }
+      })
+    } else {
+      console.log('Order submitted (no socket):', currentOrder)
+      // Clear order even if no socket (for development/testing)
+      clearOrder()
+    }
   }
 
   // Show order preview if any ingredient has been added

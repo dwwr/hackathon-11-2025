@@ -57,21 +57,27 @@ const Ticket: React.FC<TicketProps> = ({
         <div style={{ marginBottom: '4px', color: '#1a1a1a' }}>
           <strong>Course 1</strong>
         </div>
-        <div
-          style={{ marginLeft: '8px', marginBottom: '2px', color: '#1a1a1a' }}
-        >
-          -{' '}
-          <span style={{ color: '#d32f2f' }}>
-            {getItemName('rice', 0, rice)}
-          </span>
-        </div>
-        <div
-          style={{ marginLeft: '8px', marginBottom: '2px', color: '#1a1a1a' }}
-        >
-          -{' '}
-          <span style={{ color: '#d32f2f' }}>{getItemName('fish', fish)}</span>
-        </div>
-        {garnish !== undefined && (
+        {rice && (
+          <div
+            style={{ marginLeft: '8px', marginBottom: '2px', color: '#1a1a1a' }}
+          >
+            -{' '}
+            <span style={{ color: '#d32f2f' }}>
+              {getItemName('rice', 0, rice)}
+            </span>
+          </div>
+        )}
+        {fish >= 0 && (
+          <div
+            style={{ marginLeft: '8px', marginBottom: '2px', color: '#1a1a1a' }}
+          >
+            -{' '}
+            <span style={{ color: '#d32f2f' }}>
+              {getItemName('fish', fish)}
+            </span>
+          </div>
+        )}
+        {garnish !== undefined && garnish >= 0 && (
           <div
             style={{
               marginLeft: '16px',
@@ -85,7 +91,7 @@ const Ticket: React.FC<TicketProps> = ({
             </span>
           </div>
         )}
-        {sauce !== undefined && (
+        {sauce !== undefined && sauce >= 0 && (
           <div
             style={{
               marginLeft: '16px',

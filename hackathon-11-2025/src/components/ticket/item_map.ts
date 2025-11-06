@@ -44,5 +44,15 @@ export const getItemName = (
   }
 
   const itemArray = item as (string | string[])[]
-  return getRandomName(itemArray[index])
+  // Validate index is within bounds
+  if (index < 0 || index >= itemArray.length) {
+    console.warn(`Invalid index ${index} for category ${category}`)
+    return 'Unknown'
+  }
+  const nameValue = itemArray[index]
+  if (!nameValue) {
+    console.warn(`No name found at index ${index} for category ${category}`)
+    return 'Unknown'
+  }
+  return getRandomName(nameValue)
 }
