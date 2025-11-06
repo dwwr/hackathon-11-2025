@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
-import Origami from '../components/origami'
-import { assets } from '../assets/index'
+import Origami from '../../components/origami'
+import { assets } from '../../assets/index'
 import type { Order } from '@/types'
-import lineImage from '../assets/line.jpg'
+import lineImage from '../../assets/line.jpg'
 
 interface ChefSceneProps {
   easyMode?: boolean
