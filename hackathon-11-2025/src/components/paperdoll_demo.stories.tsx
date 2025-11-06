@@ -38,11 +38,11 @@ const generateRandomTicketData = () => {
   ]
   const waiters = [
     'JW England',
-    'Monica N.',
-    'Sarah K.',
-    'Mike T.',
-    'Alex R.',
-    'Jordan L.',
+    'AC Carter',
+    'Sweet Baby D',
+    'Francois',
+    'Jacoby',
+    'Keanu',
   ]
 
   return {
