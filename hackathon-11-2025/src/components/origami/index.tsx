@@ -8,8 +8,8 @@ const Origami: React.FC<OrigamiEngineProps> = ({
   const { rice, fish, garnish, sauce } = order
 
   const fishAsset = assets.fish[fish]
-  const garnishAsset = garnish ? assets.garnish[garnish] : null
-  const sauceAsset = sauce ? assets.sauce[sauce] : null
+  const garnishAsset = garnish !== undefined ? assets.garnish[garnish] : null
+  const sauceAsset = sauce !== undefined ? assets.sauce[sauce] : null
 
   return (
     <div>
