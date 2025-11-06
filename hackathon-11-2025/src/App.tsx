@@ -55,6 +55,127 @@ const generateRandomOrder = (): Order => {
   }
 }
 
+// Menu Screen Component with Marquee
+const MenuScreen: React.FC<{ status: string; inviteCode: string; setInviteCode: (code: string) => void; handleCreateMatch: () => void; handleJoinMatch: () => void }> = ({
+  status,
+  inviteCode,
+  setInviteCode,
+  handleCreateMatch,
+  handleJoinMatch,
+}) => {
+  // Generate random orders for marquee
+  const [marqueeOrders, setMarqueeOrders] = useState<Order[]>(() =>
+    Array.from({ length: 20 }, () => generateRandomOrder()),
+  )
+
+  useEffect(() => {
+    // Regenerate orders periodically for variety
+    const interval = setInterval(() => {
+      setMarqueeOrders((prev) => [
+        ...prev.slice(1),
+        generateRandomOrder(),
+      ])
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white text-center space-y-6">
+      <h1
+        style={{
+          fontSize: '6rem',
+          fontStyle: 'italic',
+          color: '#ffeb3b',
+          textShadow:
+            '4px 4px 8px rgba(0, 0, 0, 0.8), 2px 2px 4px rgba(0, 0, 0, 0.6)',
+          fontWeight: 'bold',
+          marginBottom: '1rem',
+          lineHeight: '1.2',
+        }}
+      >
+        板前 On The Line: Sushi-ya Tactics
+      </h1>
+
+      {/* Sushi marquee */}
+      <div
+        style={{
+          width: '100%',
+          overflow: 'hidden',
+          marginBottom: '2rem',
+          position: 'relative',
+          height: '120px',
+        }}
+      >
+        <div
+          className="sushi-marquee"
+          style={{
+            display: 'flex',
+            gap: '3rem',
+            width: 'fit-content',
+            alignItems: 'center',
+          }}
+        >
+          {/* Duplicate the orders for seamless looping */}
+          {[...marqueeOrders, ...marqueeOrders].map((order, index) => (
+            <div
+              key={index}
+              style={{
+                flexShrink: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Origami order={order} size={80} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <p className="text-sm opacity-80">{status}</p>
+
+      <button
+        onClick={handleCreateMatch}
+        className="px-6 py-3 bg-blue-600 rounded hover:bg-blue-700"
+      >
+        Create Match
+      </button>
+
+      <div className="flex flex-col items-center">
+        <input
+          value={inviteCode}
+          onChange={(e) => setInviteCode(e.target.value)}
+          placeholder="Enter invite code"
+          style={{
+            color: '#ffeb3b',
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+            border: '2px solid #ffeb3b',
+            borderRadius: '8px',
+            padding: '0.5rem 1rem',
+            fontSize: '1rem',
+            marginBottom: '0.5rem',
+            outline: 'none',
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = '#ffc107'
+            e.currentTarget.style.boxShadow = '0 0 10px rgba(255, 235, 59, 0.5)'
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = '#ffeb3b'
+            e.currentTarget.style.boxShadow = 'none'
+          }}
+        />
+        <button
+          onClick={handleJoinMatch}
+          className="px-6 py-3 bg-green-600 rounded hover:bg-green-700"
+        >
+          Join Match
+        </button>
+      </div>
+    </div>
+  )
+}
+
 interface MatchResponse {
   success: boolean
   matchId: string
@@ -268,10 +389,7 @@ export default function App() {
     useEffect(() => {
       // Regenerate orders periodically for variety
       const interval = setInterval(() => {
-        setMarqueeOrders((prev) => [
-          ...prev.slice(1),
-          generateRandomOrder(),
-        ])
+        setMarqueeOrders((prev) => [...prev.slice(1), generateRandomOrder()])
       }, 2000)
       return () => clearInterval(interval)
     }, [])
