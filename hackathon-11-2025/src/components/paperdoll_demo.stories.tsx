@@ -1,6 +1,6 @@
 /** @jsxImportSource react */
 import { useState, useEffect } from 'react'
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta } from '@storybook/react'
 import Origami from './origami'
 import Ticket from './ticket'
 import { assets } from './origami/assets/index'
