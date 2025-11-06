@@ -2,7 +2,58 @@ import { useState, useEffect } from 'react'
 import { io, Socket } from 'socket.io-client'
 import ExpoScene from './scenes/expo_scene/expo_scene'
 import ChefScene from './scenes/chef_scene/chef_scene'
+import Origami from './components/origami'
+import { assets } from './assets/index'
 import type { Order } from './types'
+
+// Add CSS for yellow input placeholder and marquee animation
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style')
+  styleSheet.textContent = `
+    input[type="text"]::placeholder {
+      color: rgba(255, 235, 59, 0.6);
+    }
+    input[type="text"]:focus::placeholder {
+      color: rgba(255, 235, 59, 0.4);
+    }
+    @keyframes marquee {
+      0% {
+        transform: translateX(0);
+      }
+      100% {
+        transform: translateX(-50%);
+      }
+    }
+    .sushi-marquee {
+      animation: marquee 30s linear infinite;
+    }
+  `
+  if (!document.head.querySelector('style[data-app-styles]')) {
+    styleSheet.setAttribute('data-app-styles', 'true')
+    document.head.appendChild(styleSheet)
+  }
+}
+
+// Generate random order for marquee
+const generateRandomOrder = (): Order => {
+  const fishIndex = Math.floor(Math.random() * assets.fish.length)
+  const garnishIndex =
+    Math.random() > 0.3
+      ? Math.floor(Math.random() * assets.garnish.length)
+      : undefined
+  const sauceIndex =
+    Math.random() > 0.3
+      ? Math.floor(Math.random() * assets.sauce.length)
+      : undefined
+  const rice = Math.random() > 0.2
+
+  return {
+    rice,
+    fish: fishIndex,
+    garnish: garnishIndex,
+    sauce: sauceIndex,
+  }
+}
 
 interface MatchResponse {
   success: boolean
@@ -209,9 +260,75 @@ export default function App() {
 
   // Menu screen
   if (screen === 'menu') {
+    // Generate random orders for marquee
+    const [marqueeOrders, setMarqueeOrders] = useState<Order[]>(() =>
+      Array.from({ length: 20 }, () => generateRandomOrder()),
+    )
+
+    useEffect(() => {
+      // Regenerate orders periodically for variety
+      const interval = setInterval(() => {
+        setMarqueeOrders((prev) => [
+          ...prev.slice(1),
+          generateRandomOrder(),
+        ])
+      }, 2000)
+      return () => clearInterval(interval)
+    }, [])
+
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white text-center space-y-6">
-        <h1 className="text-3xl font-bold mb-2">🍣 Sushi Game</h1>
+        <h1
+          style={{
+            fontSize: '6rem',
+            fontStyle: 'italic',
+            color: '#ffeb3b',
+            textShadow:
+              '4px 4px 8px rgba(0, 0, 0, 0.8), 2px 2px 4px rgba(0, 0, 0, 0.6)',
+            fontWeight: 'bold',
+            marginBottom: '1rem',
+            lineHeight: '1.2',
+          }}
+        >
+          板前 On The Line: Sushi-ya Tactics
+        </h1>
+
+        {/* Sushi marquee */}
+        <div
+          style={{
+            width: '100%',
+            overflow: 'hidden',
+            marginBottom: '2rem',
+            position: 'relative',
+            height: '120px',
+          }}
+        >
+          <div
+            className="sushi-marquee"
+            style={{
+              display: 'flex',
+              gap: '3rem',
+              width: 'fit-content',
+              alignItems: 'center',
+            }}
+          >
+            {/* Duplicate the orders for seamless looping */}
+            {[...marqueeOrders, ...marqueeOrders].map((order, index) => (
+              <div
+                key={index}
+                style={{
+                  flexShrink: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Origami order={order} size={80} />
+              </div>
+            ))}
+          </div>
+        </div>
+
         <p className="text-sm opacity-80">{status}</p>
 
         <button
@@ -226,7 +343,24 @@ export default function App() {
             value={inviteCode}
             onChange={(e) => setInviteCode(e.target.value)}
             placeholder="Enter invite code"
-            className="text-black px-3 py-2 rounded mb-2"
+            style={{
+              color: '#ffeb3b',
+              backgroundColor: 'rgba(0, 0, 0, 0.3)',
+              border: '2px solid #ffeb3b',
+              borderRadius: '8px',
+              padding: '0.5rem 1rem',
+              fontSize: '1rem',
+              marginBottom: '0.5rem',
+              outline: 'none',
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = '#ffc107'
+              e.target.style.boxShadow = '0 0 10px rgba(255, 235, 59, 0.5)'
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = '#ffeb3b'
+              e.target.style.boxShadow = 'none'
+            }}
           />
           <button
             onClick={handleJoinMatch}
