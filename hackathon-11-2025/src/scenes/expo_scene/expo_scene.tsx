@@ -1,8 +1,40 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import passImage from '../../assets/pass.jpg'
 import Origami from '../../components/origami'
 import Ticket from '../../components/ticket'
 import type { Order } from '@/types'
+import type { Socket } from 'socket.io-client'
+
+// Add CSS animation for fade in/out
+const successMessageStyle = `
+  @keyframes fadeInOut {
+    0% {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.8);
+    }
+    15% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.05);
+    }
+    85% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.8);
+    }
+  }
+`
+
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style')
+  styleSheet.textContent = successMessageStyle
+  if (!document.head.querySelector('style[data-success-message]')) {
+    styleSheet.setAttribute('data-success-message', 'true')
+    document.head.appendChild(styleSheet)
+  }
+}
 
 interface ExpoSceneProps {
   order: Order
@@ -12,6 +44,8 @@ interface ExpoSceneProps {
   score: number
   stars: number
   sentTime: Date
+  socket?: Socket | null
+  orderId?: string | null
 }
 
 const Plate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -71,15 +105,164 @@ const Plate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 }
 
 const ExpoScene: React.FC<ExpoSceneProps> = ({
-  order,
+  order: initialOrder,
   ticket,
   serverName,
   sentTime,
   score,
   stars,
   tableNumber,
+  socket,
+  orderId,
 }: ExpoSceneProps) => {
   const starsArray = Array.from({ length: stars }, (_, i) => i)
+
+  // Local state for the order (updated via socket)
+  const [currentOrder, setCurrentOrder] = useState<Order>(initialOrder)
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false)
+  const [showFailureMessage, setShowFailureMessage] = useState(false)
+
+  // Compare order with ticket to determine if they match
+  const compareOrder = (order: Order, ticketOrder: Order): boolean => {
+    // Check all keys match
+    if (order.rice !== ticketOrder.rice) return false
+    if (order.fish !== ticketOrder.fish) return false
+
+    // Handle optional fields - both must be undefined or both must match
+    if ((order.garnish === undefined) !== (ticketOrder.garnish === undefined)) {
+      return false
+    }
+    if (order.garnish !== undefined && order.garnish !== ticketOrder.garnish) {
+      return false
+    }
+
+    if ((order.sauce === undefined) !== (ticketOrder.sauce === undefined)) {
+      return false
+    }
+    if (order.sauce !== undefined && order.sauce !== ticketOrder.sauce) {
+      return false
+    }
+
+    return true
+  }
+
+  const handleSubmit = () => {
+    if (!socket || !orderId) {
+      console.warn('Cannot submit: missing socket or orderId')
+      return
+    }
+
+    const isPass = compareOrder(currentOrder, ticket)
+    const status: 'pass' | 'fail' = isPass ? 'pass' : 'fail'
+
+    console.log('📤 Submitting order:', {
+      orderId,
+      status,
+      order: currentOrder,
+      ticket,
+    })
+
+    socket.emit('completeOrder', { orderId, status }, (res: any) => {
+      console.log('completeOrder response:', res)
+
+      // Show message based on status
+      if (status === 'pass') {
+        setShowSuccessMessage(true)
+      } else {
+        setShowFailureMessage(true)
+      }
+
+      // Restart the loop by requesting a new order
+      if (res.success !== false) {
+        console.log('🔄 Requesting new order to restart loop...')
+        socket.emit('createOrder', (createRes: any) => {
+          console.log('createOrder response:', createRes)
+        })
+      }
+    })
+  }
+
+  const handleReject = () => {
+    if (!socket || !orderId) {
+      console.warn('Cannot reject: missing socket or orderId')
+      return
+    }
+
+    console.log('📤 Rejecting order:', { orderId, order: currentOrder, ticket })
+
+    socket.emit(
+      'completeOrder',
+      { orderId, status: 'fail' as const },
+      (res: any) => {
+        console.log('completeOrder response:', res)
+
+        // Show failure message
+        setShowFailureMessage(true)
+
+        // Restart the loop by requesting a new order
+        if (res.success !== false) {
+          console.log('🔄 Requesting new order to restart loop...')
+          socket.emit('createOrder', (createRes: any) => {
+            console.log('createOrder response:', createRes)
+          })
+        }
+      },
+    )
+  }
+
+  // Listen for orderProgress updates
+  useEffect(() => {
+    if (!socket) return
+
+    const handleOrderProgress = (data: any) => {
+      console.log('📦 ExpoScene: Order progress update received:', data)
+      let orderData: Order | null = null
+
+      if (data.order) {
+        orderData = data.order as Order
+      } else if (data.rice !== undefined || data.fish !== undefined) {
+        orderData = data as Order
+      }
+
+      if (orderData) {
+        console.log('📦 ExpoScene: Updating order to:', orderData)
+        setCurrentOrder(orderData)
+      } else {
+        console.warn('📦 ExpoScene: Could not parse order data from:', data)
+      }
+    }
+
+    socket.on('orderProgress', handleOrderProgress)
+
+    return () => {
+      socket.off('orderProgress', handleOrderProgress)
+    }
+  }, [socket])
+
+  // Update local state if prop changes
+  useEffect(() => {
+    setCurrentOrder(initialOrder)
+  }, [initialOrder])
+
+  // Auto-hide success message after 3 seconds
+  useEffect(() => {
+    if (showSuccessMessage) {
+      const timer = setTimeout(() => {
+        setShowSuccessMessage(false)
+      }, 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [showSuccessMessage])
+
+  // Auto-hide failure message after 3 seconds
+  useEffect(() => {
+    if (showFailureMessage) {
+      const timer = setTimeout(() => {
+        setShowFailureMessage(false)
+      }, 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [showFailureMessage])
 
   return (
     <div
@@ -97,8 +280,64 @@ const ExpoScene: React.FC<ExpoSceneProps> = ({
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
+        position: 'relative',
       }}
     >
+      {/* Celebratory success message */}
+      {showSuccessMessage && (
+        <div
+          style={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 1000,
+            padding: '2rem 4rem',
+            backgroundColor: 'rgba(76, 175, 80, 0.95)',
+            color: 'white',
+            borderRadius: '20px',
+            fontSize: '2.5rem',
+            fontWeight: 'bold',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem',
+            animation: 'fadeInOut 3s ease-in-out',
+          }}
+        >
+          <span style={{ fontSize: '3rem' }}>🎉</span>
+          <span>Perfect! Order Complete!</span>
+          <span style={{ fontSize: '3rem' }}>🎉</span>
+        </div>
+      )}
+
+      {/* Failure message */}
+      {showFailureMessage && (
+        <div
+          style={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 1000,
+            padding: '2rem 4rem',
+            backgroundColor: 'rgba(244, 67, 54, 0.95)',
+            color: 'white',
+            borderRadius: '20px',
+            fontSize: '2.5rem',
+            fontWeight: 'bold',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem',
+            animation: 'fadeInOut 3s ease-in-out',
+          }}
+        >
+          <span style={{ fontSize: '3rem' }}>❌</span>
+          <span>Order Mismatch! Please Try Again</span>
+          <span style={{ fontSize: '3rem' }}>❌</span>
+        </div>
+      )}
       {/* Left side - Info display */}
       <div
         style={{
@@ -200,7 +439,7 @@ const ExpoScene: React.FC<ExpoSceneProps> = ({
             }}
           >
             <Plate>
-              <Origami order={order} size={200} />
+              <Origami order={currentOrder} size={200} />
             </Plate>
           </div>
         </div>
@@ -213,7 +452,7 @@ const ExpoScene: React.FC<ExpoSceneProps> = ({
           }}
         >
           <button
-            onClick={() => console.log('Order rejected:', { order, ticket })}
+            onClick={handleReject}
             style={{
               padding: '0.75rem 1.5rem',
               fontSize: '16px',
@@ -239,7 +478,7 @@ const ExpoScene: React.FC<ExpoSceneProps> = ({
             Reject
           </button>
           <button
-            onClick={() => console.log('Order submitted:', { order, ticket })}
+            onClick={handleSubmit}
             style={{
               padding: '0.75rem 1.5rem',
               fontSize: '16px',

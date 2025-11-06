@@ -146,6 +146,25 @@ export default function App() {
       }
     })
 
+    // Listen for chef's order progress (real-time updates as chef builds)
+    socket.on('orderProgress', (data: any) => {
+      console.log('👨‍🍳 Order progress update received:', data)
+      let orderData: Order | null = null
+
+      if (data.order) {
+        orderData = data.order as Order
+      } else if (data.rice !== undefined || data.fish !== undefined) {
+        orderData = data as Order
+      }
+
+      if (orderData) {
+        console.log('👨‍🍳 Setting currentOrder to:', orderData)
+        setCurrentOrder(orderData)
+      } else {
+        console.warn('👨‍🍳 Could not parse order data from:', data)
+      }
+    })
+
     // Listen for chef's completed order (what the chef actually made)
     socket.on('chefOrderSubmitted', (data: any) => {
       console.log('👨‍🍳 Chef order submitted:', data)
@@ -179,6 +198,7 @@ export default function App() {
 
     return () => {
       socket.off('newOrder')
+      socket.off('orderProgress')
       socket.off('chefOrderSubmitted')
       socket.off('scoreUpdate')
       socket.off('gameOver')
@@ -234,35 +254,35 @@ export default function App() {
   if (screen === 'game') {
     // Render ExpoScene for player1, ChefScene for player2
     if (role === 'player1') {
-      // If no order exists yet, show empty state
-      if (!currentOrder || !currentTicket) {
-        // Create empty order for initial render
-        const emptyOrder: Order = {
-          rice: false,
-          fish: -1,
-        }
-        return (
-          <ExpoScene
-            order={emptyOrder}
-            ticket={emptyOrder}
-            serverName={serverName}
-            tableNumber={tableNumber}
-            score={score}
-            stars={stars}
-            sentTime={sentTime}
-          />
-        )
+      // Default empty order
+      const emptyOrder: Order = {
+        rice: false,
+        fish: -1,
       }
+
+      // Use currentOrder if it exists, otherwise empty
+      const orderToDisplay = currentOrder || emptyOrder
+      // Use currentTicket if it exists, otherwise empty (will show empty ticket)
+      const ticketToDisplay = currentTicket || emptyOrder
+
+      console.log(
+        '📺 Rendering ExpoScene with order:',
+        orderToDisplay,
+        'ticket:',
+        ticketToDisplay,
+      )
 
       return (
         <ExpoScene
-          order={currentOrder}
-          ticket={currentTicket}
+          order={orderToDisplay}
+          ticket={ticketToDisplay}
           serverName={serverName}
           tableNumber={tableNumber}
           score={score}
           stars={stars}
           sentTime={sentTime}
+          socket={socket}
+          orderId={orderId}
         />
       )
     }

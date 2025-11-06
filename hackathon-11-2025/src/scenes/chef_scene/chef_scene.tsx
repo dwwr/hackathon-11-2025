@@ -170,6 +170,13 @@ const ChefScene: React.FC<ChefSceneProps> = ({
             break
         }
 
+        // Send progress update to server (which will forward to expo)
+        if (socket) {
+          socket.emit('buildOrder', newOrder, () => {
+            // Progress update sent
+          })
+        }
+
         return newOrder
       })
     } catch (error) {
@@ -193,7 +200,8 @@ const ChefScene: React.FC<ChefSceneProps> = ({
 
     // Submit the chef's completed order to the expo player
     if (socket) {
-      socket.emit('submitOrder', currentOrder, (res: any) => {
+      console.log('build order:', currentOrder)
+      socket.emit('buildOrder', currentOrder, (res: any) => {
         console.log('submitOrder response:', res)
         if (res.success) {
           console.log('Order submitted to Player 1:', currentOrder)
