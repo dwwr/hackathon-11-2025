@@ -6,8 +6,8 @@ import { formatDate } from './format_date'
 const Ticket: React.FC<TicketProps> = ({
   order,
   orderNumber = 466,
-  table = '5, 6 Top 3 Covers',
-  waiter = 'JW England',
+  table,
+  waiter,
   sentTime,
 }) => {
   const { rice, fish, garnish, sauce } = order
